@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marcus Fuentes — Language Practice G5.6</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #f5f4f0; min-height: 100vh; color: #1a1a1a; }
+  .header { background: #fff; border-bottom: 1px solid #e0e0e0; padding: 14px 24px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 10; }
+  .avatar { width: 40px; height: 40px; border-radius: 50%; background: #534AB7; color: #fff; font-weight: 700; font-size: 15px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .header-text h1 { font-size: 15px; font-weight: 700; }
+  .header-text p  { font-size: 12px; color: #777; }
+  .progress-wrap { background: #fff; padding: 12px 24px; border-bottom: 1px solid #eee; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #555; margin-bottom: 6px; }
+  .progress-bar-bg { background: #e8e8e8; border-radius: 99px; height: 7px; }
+  .progress-bar-fill { height: 7px; border-radius: 99px; background: #534AB7; transition: width .4s; }
+  .card { background: #fff; border-radius: 12px; padding: 24px; max-width: 720px; margin: 24px auto; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .question-text { font-size: 15px; font-weight: 700; line-height: 1.65; white-space: pre-wrap; margin-bottom: 16px; }
+  .tip-box { background: #E6F1FB; border-left: 4px solid #185FA5; border-radius: 6px; padding: 12px 14px; margin-bottom: 18px; font-size: 13px; color: #0C447C; }
+  .tip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .tip-label { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+  .hint-btn { display: none; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; color: #185FA5; border: 1px solid #185FA5; border-radius: 99px; padding: 2px 10px; background: transparent; cursor: pointer; }
+  .hint-btn.visible { display: flex; }
+  .tip-text { line-height: 1.5; }
+  .hint-reveal { display: none; margin-top: 8px; padding-top: 8px; border-top: 1px solid #c2d9f0; font-size: 13px; line-height: 1.5; }
+  .hint-reveal.open { display: block; }
+  .options { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
+  .opt { display: flex; align-items: flex-start; gap: 12px; padding: 13px 16px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: border-color .15s, background .15s; font-size: 14px; line-height: 1.5; white-space: pre-wrap; }
+  .opt:hover:not(.disabled) { border-color: #534AB7; background: #fafafe; }
+  .opt.selected { border-color: #534AB7; background: #EEEDFE; }
+  .opt.correct  { border-color: #1D9E75; background: #EAF3DE; }
+  .opt.wrong    { border-color: #E24B4A; background: #FCEBEB; opacity: .45; pointer-events: none; }
+  .opt.disabled { cursor: default; }
+  .letter { width: 26px; height: 26px; border-radius: 50%; border: 2px solid #bbb; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; flex-shrink: 0; transition: all .15s; }
+  .opt.selected .letter { border-color: #534AB7; background: #534AB7; color: #fff; }
+  .opt.correct .letter  { border-color: #1D9E75; background: #1D9E75; color: #fff; }
+  .opt.wrong .letter    { border-color: #E24B4A; background: #E24B4A; color: #fff; }
+  .feedback { border-radius: 8px; padding: 13px 16px; font-size: 13px; line-height: 1.55; margin-bottom: 14px; }
+  .feedback.correct-fb { background: #EAF3DE; border: 1px solid #1D9E75; color: #14593e; }
+  .feedback.wrong-fb   { background: #FCEBEB; border: 1px solid #E24B4A; color: #9b1c1c; }
+  .btn-row { display: flex; justify-content: space-between; align-items: center; }
+  .btn { padding: 10px 22px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; border: none; }
+  .btn-check { background: #534AB7; color: #fff; }
+  .btn-check:disabled { background: #c5c2e8; cursor: not-allowed; }
+  .btn-back  { background: transparent; color: #534AB7; border: 2px solid #534AB7; }
+  .btn-back:disabled { color: #bbb; border-color: #ddd; cursor: not-allowed; }
+  .btn-next  { background: #534AB7; color: #fff; margin-left: auto; }
+  .results { max-width: 640px; margin: 40px auto; padding: 32px 24px; background: #fff; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,.1); text-align: center; }
+  .score-ring-wrap { margin: 0 auto 24px; width: 120px; height: 120px; }
+  .score-ring-wrap svg { width: 120px; height: 120px; }
+  .ring-track { fill: none; stroke: #e8e8e8; stroke-width: 10; }
+  .ring-fill  { fill: none; stroke: #534AB7; stroke-width: 10; stroke-linecap: round; }
+  .ring-text  { font-size: 22px; font-weight: 800; fill: #534AB7; dominant-baseline: middle; text-anchor: middle; }
+  .ring-sub   { font-size: 10px; fill: #888; dominant-baseline: middle; text-anchor: middle; }
+  .results h2 { font-size: 22px; margin-bottom: 6px; }
+  .results p  { font-size: 14px; color: #555; margin-bottom: 24px; }
+  .btn-restart { background: #534AB7; color: #fff; padding: 12px 32px; border-radius: 8px; border: none; font-size: 14px; font-weight: 700; cursor: pointer; }
+  .review-card { max-width: 720px; margin: 16px auto; background: #fff; border-radius: 12px; padding: 20px 24px; box-shadow: 0 1px 4px rgba(0,0,0,.08); border-left: 5px solid #ccc; }
+  .review-card.first-try  { border-left-color: #1D9E75; }
+  .review-card.retry      { border-left-color: #E24B4A; }
+  .review-badge { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 99px; margin-bottom: 10px; }
+  .review-badge.ok  { background: #EAF3DE; color: #14593e; }
+  .review-badge.bad { background: #FCEBEB; color: #9b1c1c; }
+  .review-qtext { font-size: 14px; font-weight: 700; white-space: pre-wrap; line-height: 1.6; margin-bottom: 12px; }
+  .review-opt { display: flex; gap: 10px; padding: 8px 12px; border-radius: 7px; font-size: 13px; margin-bottom: 6px; line-height: 1.45; white-space: pre-wrap; }
+  .review-opt.ro-correct { background: #EAF3DE; color: #14593e; font-weight: 600; }
+  .review-opt.ro-tried   { background: #FCEBEB; color: #9b1c1c; text-decoration: line-through; opacity: .6; }
+  .review-opt.ro-neutral { background: #f5f5f5; color: #555; }
+  .review-exp { background: #f0f4f0; border-left: 3px solid #1D9E75; border-radius: 6px; padding: 10px 14px; font-size: 13px; color: #2a4a2a; line-height: 1.6; margin-top: 10px; }
+  .review-header { max-width: 720px; margin: 24px auto 0; display: flex; gap: 12px; flex-wrap: wrap; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="avatar">MF</div>
+  <div class="header-text">
+    <h1>Language Practice</h1>
+    <p>Based on your last 3 tests</p>
+  </div>
+</div>
+
+<div class="progress-wrap" id="prog-wrap">
+  <div class="progress-label">
+    <span id="prog-label">0 of 15 completed</span>
+    <span id="prog-remain">15 remaining</span>
+  </div>
+  <div class="progress-bar-bg"><div class="progress-bar-fill" id="prog-fill" style="width:0%"></div></div>
+</div>
+
+<div id="app"></div>
+
+<script>
+var EYE_LOCKED = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+var EYE_OPEN  = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>';
+
+var QS = [
+
+  /* ── FIGURATIVE LANGUAGE ───────────────────────────────────────── */
+  {
+    q:'Read the text below and then answer the question that follows.\n\nGrandma always said bedtime came too early. After walking her dog for an hour, cooking dinner, and helping three grandchildren with homework, she collapsed into her armchair and sighed, "|b|I\'ve been on my feet for a thousand years!|/b|"\n\nWhat does this hyperbole suggest about Grandma\'s situation?',
+    tip:'Think about what hyperbole is meant to do for the reader, not what it literally says.',
+    hint:'Hyperbole is extreme exaggeration used to express a feeling, not a fact. Ask yourself: what emotion or situation is Grandma trying to communicate by claiming something that is clearly impossible?',
+    opts:[
+      'It suggests that Grandma has literally been standing for a thousand years.',
+      'It suggests that Grandma stands up for long periods every single day.',
+      'It suggests that Grandma is exaggerating to express how exhausted she feels.',
+      'It suggests that Grandma is counting exactly how long she has been standing.'
+    ],
+    ans:2,
+    wrongs:[
+      'Standing for a thousand years is physically impossible. Hyperbole is never meant to be taken as a literal fact — think about what feeling the impossible claim is meant to express.',
+      'Hyperbole does not describe a daily routine. The exaggeration is tied to how Grandma feels in this specific moment after a long, busy day.',
+      null,
+      'Using an extreme impossible number is the opposite of counting precisely. When someone exaggerates wildly, they are expressing intensity of feeling, not accuracy.'
+    ],
+    exp:'Hyperbole is intentional extreme exaggeration used to convey a strong feeling. "A thousand years" is physically impossible, so it is not meant literally. Grandma is exaggerating to express how completely exhausted she feels after a long, busy day — walking the dog, cooking dinner, and helping with homework. The impossible claim is a way of saying her exhaustion feels endless. Recognizing hyperbole means asking: is this literally possible, and if not, what emotion is the speaker conveying?',
+    mapTo:'G5.6 Q18', teks:'L.5.5a'
+  },
+  {
+    q:'Read the story below.\n\nJordan had been nervous about joining the debate team, but after months of practice, his confidence grew. His coach smiled and said, "You\'ve really |b|come out of your shell|/b| this year."\n\nWhat does the expression "come out of your shell" suggest about Jordan?',
+    tip:'Think about what a shell is used for, and what it would mean for a creature to leave it.',
+    hint:'A shell is a protective covering that an animal hides inside. Ask yourself: if Jordan has "come out of his shell," what change has happened in his behavior or personality?',
+    opts:[
+      'It suggests that Jordan has become more open and confident.',
+      'It suggests that Jordan literally climbed out of something.',
+      'It suggests that Jordan found a new hiding place.',
+      'It suggests that Jordan is still too shy to participate in debate.'
+    ],
+    ans:0,
+    wrongs:[
+      null,
+      'This expression is figurative, not literal. Jordan is a person — he is not physically inside a shell. Think about what the shell represents in terms of personality.',
+      'Coming out of something means leaving it, not finding a new version of it. The expression describes movement away from hiding, not toward it.',
+      'The expression "come out of your shell" describes a positive change — moving away from shyness. Re-read the coach\'s words and notice the positive tone.'
+    ],
+    exp:'"Come out of your shell" is an idiom meaning to become more open, social, or confident after a period of being shy or reserved. A shell is a protective covering that hides a creature inside, so "coming out" of it figuratively means Jordan stopped hiding and became more outgoing. This matches the story context: Jordan started nervous and grew confident after practice.',
+    mapTo:'G5.6 Q23', teks:'L.5.5b'
+  },
+  {
+    q:'Read the sentence.\n\nAfter the team _______ all of their energy in the first half, the coach called a timeout to regroup.\n\nSelect the correct verb form to complete the sentence.',
+    tip:'Think about the time relationship between the two actions in this sentence.',
+    hint:'Two things happened: the team used up their energy, and the coach called a timeout. Which one finished first? The verb form you choose must show that one past action was already completed before the other.',
+    opts:['spent','has spent','had spent','will have spent'],
+    ans:2,
+    wrongs:[
+      '"Spent" is simple past — it places both events at the same point in time. But energy being used up happened before the coach called the timeout. The sentence needs a form that signals one past event came before another past event.',
+      '"Has spent" is present perfect, which connects a past action to the present moment. Both events in this sentence are entirely in the past, so present perfect does not fit.',
+      null,
+      '"Will have spent" is future perfect — it describes something that will be completed before a future moment. Both events in this sentence already happened in the past, so future perfect does not apply.'
+    ],
+    exp:'"Had spent" is the past perfect tense (had + past participle). It is used when one past action was completed before another past action. The energy was spent first — then the coach called the timeout. Past perfect captures that sequence: "had spent" → "called a timeout." The word "After" is a signal that two events happened in sequence, and the verb in the "After" clause should be in the past perfect to show it was completed first. Simple past ("spent") loses that before/after relationship.',
+    mapTo:'G5.6 Q8', teks:'L.5.1c'
+  },
+
+  /* ── TITLE FORMATTING ──────────────────────────────────────────── */
+  {
+    q:'Choose the correctly formatted title as it would appear in a written assignment.',
+    tip:'Think about what type of work each title refers to before deciding how it should be formatted.',
+    hint:'Longer or major works — like full books, movies, and TV shows — are italicized. Shorter works — like songs, poems, and articles — use quotation marks. Match each title to its category.',
+    opts:[
+      'The title of a book: "Holes"',
+      'The title of a song: Somewhere Over the Rainbow',
+      'The title of a movie: |i|Toy Story|/i|',
+      'The title of a TV show: "Friends"'
+    ],
+    ans:2,
+    wrongs:[
+      '"Holes" is a book — a full-length major work. Full-length books should be italicized or underlined, not placed in quotation marks.',
+      '"Somewhere Over the Rainbow" is a song — a shorter work — which should be placed in quotation marks. Leaving a song title without any formatting is an error.',
+      null,
+      'Friends is a TV series — a major work. TV show titles should be italicized or underlined, not placed in quotation marks.'
+    ],
+    exp:'Toy Story is a movie — a full-length, major work — so italicizing it is correct. "Holes" is a book (major work) incorrectly placed in quotation marks. "Somewhere Over the Rainbow" is a song (shorter work) that needs quotation marks but is shown without them. "Friends" is a TV show (major work) incorrectly placed in quotation marks. The rule: books, movies, TV shows, newspapers → italics or underline. Songs, poems, short stories, articles → quotation marks.',
+    mapTo:'G5.6 Q17', teks:'L.5.2d'
+  },
+
+  {
+    q:'Choose the correctly formatted title as it would appear in a written assignment.',
+    tip:'Look at each title and decide whether the formatting it has matches the type of work it refers to.',
+    hint:'Check the type of work each option names, then ask: does the formatting match the rule for that type? A title in quotation marks is treated as a shorter work. A title that is italicized is treated as a longer work.',
+    opts:[
+      'The title of a book: |i|Bud, Not Buddy|/i|',
+      'The title of a short story: The Lottery',
+      'The title of a movie: "Ratatouille"',
+      'The title of a poem: The Raven'
+    ],
+    ans:0,
+    wrongs:[
+      null,
+      '"The Lottery" is a short story — a shorter work — which should be placed in quotation marks. Leaving a short story title without any formatting is an error.',
+      '"Ratatouille" is a movie — a major, full-length work — which should be italicized or underlined, not placed in quotation marks.',
+      '"The Raven" is a poem — a shorter work — which should be placed in quotation marks. Leaving a poem title without any formatting is an error.'
+    ],
+    exp:'Bud, Not Buddy is a book — a full-length, major work — so italicizing it is correct. "The Lottery" (short story) and "The Raven" (poem) are shorter works that need quotation marks but are shown without them. "Ratatouille" is a movie — a major work — that should be italicized but is incorrectly placed in quotation marks. The rule: books, movies, TV shows, newspapers → italics or underline. Poems, short stories, songs, articles → quotation marks.',
+    mapTo:'G5.6 Q17', teks:'L.5.2d'
+  },
+  {
+    q:'Read the sentence.\n\nThe crowd grew quiet as the performer stepped onto the stage, and she began to sing with a voice so _______ it brought tears to many eyes.\n\nWhich word best completes the sentence to show that the voice had a powerful, deeply moving effect?',
+    tip:'Read the sentence carefully and think about what quality of the voice would explain the crowd\'s emotional reaction.',
+    hint:'The sentence describes a specific emotional effect — bringing tears to the audience\'s eyes. Which word\'s connotation best matches a voice capable of producing that kind of powerful emotional response?',
+    opts:['loud','pleasant','piercing','stirring'],
+    ans:3,
+    wrongs:[
+      '"Loud" describes volume, not emotional power. A loud voice does not necessarily move people to tears — think about what quality would cause that specific reaction.',
+      '"Pleasant" means agreeable or enjoyable but does not convey depth or power. A pleasant voice is nice to hear, but the sentence requires something that explains a strong emotional response.',
+      '"Piercing" suggests a sharp, cutting sound — which can be unpleasant. That quality would not explain why the audience was moved to tears in an emotional way.',
+      null
+    ],
+    exp:'"Stirring" means deeply moving or emotionally powerful — it is the word whose connotation matches a voice that brings tears to people\'s eyes. "Loud" only describes volume. "Pleasant" is too mild and positive without implying emotional depth. "Piercing" connotes sharpness that can be uncomfortable, not moving. When choosing precise words, always ask: does this word\'s connotation match the specific effect described in the sentence?',
+    mapTo:'G5.6 Q14', teks:'L.5.5c'
+  },
+
+  /* ── VERB TENSE ────────────────────────────────────────────────── */
+  {
+    q:'Read the paragraph below.\n\n(1) The school library opens every morning at seven o\'clock. (2) Students can check out up to five books at a time. (3) The librarian helped students find research materials yesterday. (4) Many students visit the library between classes to study quietly.\n\nWhich sentence in the paragraph contains an error?',
+    tip:'Read the paragraph as a whole and decide what tense the writing is in before looking for the sentence that does not fit.',
+    hint:'Look at the verbs in sentences 1, 2, and 4. What tense are they written in? Now check sentence 3 — does its verb match that same tense?',
+    opts:['Sentence 1','Sentence 2','Sentence 3','Sentence 4'],
+    ans:2,
+    wrongs:[
+      'Sentence 1 uses present tense ("opens"), which is consistent with the paragraph\'s description of how the library currently operates.',
+      'Sentence 2 uses present tense ("can check out"), which is consistent with the ongoing library policy being described.',
+      null,
+      'Sentence 4 uses present tense ("visit"), which is consistent with the other sentences describing current, habitual library use.'
+    ],
+    exp:'Sentences 1, 2, and 4 all use present tense to describe how the library currently operates — its hours, its rules, and how students use it. Sentence 3 shifts to past tense ("helped... yesterday"), which breaks the paragraph\'s tense consistency. A paragraph describing general, ongoing facts should stay in the present tense throughout. "Yesterday" also introduces a specific past time marker that conflicts with the rest of the paragraph\'s present-tense, general-truth framing.',
+    mapTo:'G5.6 Q4', teks:'L.5.1d'
+  },
+  {
+    q:'Select the correct verb form to complete the sentence.\n\nBy the time the coach blew the final whistle, the visiting team _______ all of their substitutions.',
+    tip:'Think about the time relationship between the two events described in this sentence.',
+    hint:'The whistle ended the game. The substitutions happened before that moment. Which verb form shows that one past action was already completed before another past moment?',
+    opts:['used','has used','will have used','had used'],
+    ans:3,
+    wrongs:[
+      '"Used" is simple past, which places both events — the whistle and the substitutions — at the same point in time. But the substitutions were already completed before the whistle blew. The sentence needs a form that shows one past event came before another past moment.',
+      '"Has used" is present perfect — it connects a past action to the present. Both events in this sentence are entirely in the past, so present perfect is not the right fit.',
+      '"Will have used" is future perfect — it describes something that will be finished before a future moment. Both events here already happened in the past, so future perfect does not apply.',
+      null
+    ],
+    exp:'"Had used" is the past perfect tense (had + past participle). It is used when one past action was completed before another past moment. Here, the substitutions were all used up before the final whistle blew — so past perfect is the correct form. The signal phrase "By the time" almost always signals past perfect because it points to a deadline in the past before which something was finished. Simple past ("used") loses that before/after sequence.',
+    mapTo:'G5.6 Q8', teks:'L.5.1c'
+  },
+
+  /* ── TRANSITIONS ───────────────────────────────────────────────── */
+  {
+    q:'Choose the best transition.\n\nSolar panels are becoming more affordable for homeowners. ________________, many cities are now offering tax credits to encourage people to install them.',
+    tip:'Identify the logical relationship between the two sentences before choosing a connecting word.',
+    hint:'Ask yourself: is the second sentence a cause, a contrast, or an addition to the first? Does it happen because of the first sentence, despite it, or alongside it?',
+    opts:['In contrast,','Additionally,','However,','As a result of this,'],
+    ans:1,
+    wrongs:[
+      '"In contrast" signals that the second sentence presents an opposing idea. But tax credits for solar panels do not oppose the fact that panels are becoming cheaper — these two facts point in the same direction.',
+      null,
+      '"However" signals that the second sentence contradicts or qualifies the first. Affordable panels and tax credits are both positive developments supporting solar energy — there is no contradiction between them.',
+      '"As a result of this" means the second sentence was caused by the first. Cities offering tax credits is not necessarily caused by panels becoming cheaper — the two sentences are separate, related facts, not cause and effect.'
+    ],
+    exp:'"Additionally" is the correct transition because it introduces a second, related fact that adds to the first. The first sentence says panels are becoming cheaper; the second says cities are also offering tax credits. Both facts support the same idea — solar energy is becoming more accessible. "Additionally" (like "Furthermore," "Moreover," and "In addition") signals addition: a new fact is being layered on top of what was already stated. "However" and "In contrast" signal contradiction. "As a result of this" signals causation.',
+    mapTo:'G5.6 Q15', teks:'L.5.1a'
+  },
+
+  /* ── ESSAY TOPIC INTRODUCTION ──────────────────────────────────── */
+  {
+    q:'A student is writing an essay about whether schools should offer longer lunch breaks for students.\n\nChoose the option that best introduces the student\'s topic and frames it as a debatable question.',
+    tip:'Think about what a strong introductory sentence needs to do for the reader at the start of an essay.',
+    hint:'An introductory sentence should name the specific topic of the essay and signal that it is a question worth debating — not just provide background facts or argue one side immediately.',
+    opts:[
+      'Students at most schools get between twenty and thirty minutes for lunch every day.',
+      'Longer lunch breaks would help students focus better in afternoon classes.',
+      'Should schools extend lunch periods for students, or is the current time already enough?',
+      'Lunch is an important meal because it gives students energy for the rest of the school day.'
+    ],
+    ans:2,
+    wrongs:[
+      'This sentence provides a factual background detail but does not introduce the essay\'s specific debate. A topic introduction must signal the question being explored, not just state a related fact.',
+      'This sentence takes a position on one side of the debate immediately. A topic introduction should frame the issue as open to discussion, not argue for an answer before the essay has begun.',
+      null,
+      'This sentence provides general information about lunch but does not address the specific debate — whether breaks should be longer. It is background information, not a topic introduction.'
+    ],
+    exp:'Option C directly frames the essay\'s topic as a debatable question: "Should schools extend lunch periods, or is the current time already enough?" A strong topic introduction names the specific issue and signals there are two sides worth exploring. Option A states a fact but does not introduce a debate. Option B argues a position before framing the topic. Option D gives general background unrelated to the specific question of longer versus shorter lunch breaks.',
+    mapTo:'G5.6 Q3', teks:'W.5.1a'
+  },
+
+  /* ── CONTEXT CLUES / VOCABULARY ────────────────────────────────── */
+  {
+    q:'Read the text below and then answer the question that follows.\n\nThe new lighting system was designed to conserve energy in the building. When no one was in a room, the lights would automatically dim to preserve power.\n\nWhat does conserve mean in the text?',
+    tip:'Use the details in the text to figure out the meaning rather than relying on the word alone.',
+    hint:'Look at what the lighting system is designed to do and what happens when rooms are empty. What do both of those details tell you about the purpose of "conserving" energy?',
+    opts:[
+      'Create or produce something new',
+      'Distribute something evenly among many people',
+      'Save or avoid wasting something',
+      'Measure or record the amount of something'
+    ],
+    ans:2,
+    wrongs:[
+      'The lighting system does not generate energy — it manages how much is used. Think about whether the context supports creating something or managing something.',
+      'The text does not describe sharing energy among people. The system responds to whether a room is empty — think about what purpose that serves.',
+      null,
+      'The text describes the lights dimming automatically, not recording measurements. Think about what goal the dimming behavior serves.'
+    ],
+    exp:'"Conserve" means to save or protect something from being wasted or used up unnecessarily. The context clues are: (1) the system was "designed to conserve energy" — a design goal, (2) lights "dim to preserve power" when rooms are empty — the word "preserve" is a synonym for "conserve" appearing in the very next sentence. When an unfamiliar word is used alongside a synonym or a result that clarifies its meaning, those are the strongest context clues to use.',
+    mapTo:'G5.6 Q13', teks:'L.5.4a'
+  },
+
+  /* ── COMMA RULES ───────────────────────────────────────────────── */
+  {
+    q:'Read the sentence below.\n\nSince Mia wanted to present her project first she had to arrive at school early.\n\nWhere should a comma be added to correct the error?',
+    tip:'Find where the opening part of the sentence ends and the main subject begins.',
+    hint:'This sentence opens with a dependent clause — a group of words that cannot stand alone. A comma is needed between that opening clause and the main independent clause that follows.',
+    opts:[
+      'after Since',
+      'after wanted',
+      'after first',
+      'after early'
+    ],
+    ans:2,
+    wrongs:[
+      'Placing a comma after "Since" would split the opening clause before it is finished. The entire opening clause — "Since Mia wanted to present her project first" — must stay together before the comma.',
+      'Placing a comma after "wanted" interrupts the middle of the dependent clause. The comma belongs at the boundary between the dependent clause and the main clause, not inside the dependent clause.',
+      null,
+      'A comma after "early" would come at the end of the sentence, which is not a location that requires a comma here. The error is a missing comma between the two clauses, not at the sentence\'s end.'
+    ],
+    exp:'When a sentence begins with a dependent clause (a clause that cannot stand alone as a sentence), a comma is placed after the entire dependent clause and before the main independent clause. Here, "Since Mia wanted to present her project first" is the dependent clause — it does not express a complete thought on its own. The main clause is "she had to arrive at school early." The comma belongs after "first," right at the boundary: "Since Mia wanted to present her project first, she had to arrive at school early."',
+    mapTo:'G5.6 Q11', teks:'L.5.2'
+  },
+  {
+    q:'Read the sentence below.\n\nRamona look at that incredible sunset over the mountains!\n\nSelect the correctly punctuated version of this sentence.',
+    tip:'Look at how the speaker is addressing someone in this sentence.',
+    hint:'When a name or title is used to speak directly to someone, it must be separated from the rest of the sentence by a comma.',
+    opts:[
+      'Ramona, look at that incredible sunset over the mountains!',
+      'Ramona look, at that incredible sunset over the mountains!',
+      'Ramona look at that, incredible sunset over the mountains!',
+      'Ramona look at that incredible, sunset over the mountains!'
+    ],
+    ans:0,
+    wrongs:[
+      null,
+      'The comma after "look" breaks apart the verb and its object — "look at that sunset" is one continuous thought. Commas for direct address go right after the name, not after the first verb.',
+      'The comma after "that" splits a noun phrase mid-thought. The only comma needed here is the one that separates the direct address name from the rest of the sentence.',
+      'The comma after "incredible" separates an adjective from the noun it modifies ("sunset"), which is incorrect. The comma belongs after the name used for direct address.'
+    ],
+    exp:'When a name is used at the beginning of a sentence to directly address someone, a comma is placed immediately after that name. "Ramona" is the direct address here — the speaker is calling out to Ramona. The correct punctuation is: "Ramona, look at that incredible sunset over the mountains!" The comma goes right after the name and before the rest of the sentence. This is the same rule that applies any time you speak directly to someone using their name or title.',
+    mapTo:'G5.6 Q24', teks:'L.5.2'
+  },
+
+  /* ── CORRELATIVE CONJUNCTIONS ──────────────────────────────────── */
+  {
+    q:'Choose the sentence that is grammatically correct.',
+    tip:'Read each sentence and check whether the subject and verb agree, and whether any conjunction pairs are used correctly.',
+    hint:'When a correlative conjunction joins two subjects, the verb must agree with the subject closest to it. Also check that each conjunction pair uses its correct partner word.',
+    opts:[
+      'Either the coach or the players was responsible for the strategy.',
+      'Not only did she win the race, and she also set a new record.',
+      'Both the principal and the teachers plans the school calendar together.',
+      'Neither the cat nor the dogs were bothered by the loud noise.'
+    ],
+    ans:3,
+    wrongs:[
+      'With "either...or," the verb agrees with the subject closest to it — "the players" is plural, so the verb should be "were," not "was."',
+      '"Not only" must pair with "but also," not with "and." Using "and" breaks the required correlative pair. The correct form is: "Not only did she win the race, but she also set a new record."',
+      'With "both...and," both subjects are included, making the compound subject plural — the verb should be "plan," not "plans."',
+      null
+    ],
+    exp:'"Neither...nor" is a correlative conjunction pair. When "neither...nor" joins two subjects, the verb agrees with the subject closest to it — "the dogs" is plural, so "were" is correct. Common correlative pairs are: either/or, neither/nor, both/and, not only/but also. With "either/or" and "neither/nor," the verb matches the nearer subject. With "both/and," the subject is always plural. Option B incorrectly replaces "but also" with "and," breaking the "not only...but also" pair.',
+    mapTo:'G5.6 Q7', teks:'L.5.1e'
+  },
+  {
+    q:'Fill in the blanks with the correct pair of correlative conjunctions to complete the sentence.\n\n_______ the cast members _______ the director had heard about the last-minute change to the script before rehearsal began.',
+    tip:'Think about what the sentence is saying — did anyone know about the change, or did nobody know?',
+    hint:'Read the sentence carefully. Is it saying that some people knew, all people knew, or nobody knew? Match that meaning to the correct conjunction pair.',
+    opts:[
+      'Both … and',
+      'Not only … but also',
+      'Either … or',
+      'Neither … nor'
+    ],
+    ans:3,
+    wrongs:[
+      '"Both...and" means all of the listed people or things are included — it would mean everyone had heard about the change. But the sentence is saying the opposite.',
+      '"Not only...but also" adds extra information — it means one thing is true, plus another thing is also true. Check whether the sentence is adding information or excluding everyone.',
+      '"Either...or" presents a choice between two options — it would mean one group or the other had heard, but not both. The sentence is saying that nobody knew, not that one group did.',
+      null
+    ],
+    exp:'"Neither...nor" is the correct pair because the sentence says that nobody — not the cast members, not the director — knew about the change. "Neither...nor" expresses complete exclusion: it means none of the items listed apply. "Both...and" includes everyone. "Either...or" presents a choice between two options. "Not only...but also" adds information to what was already stated. When the sentence means "not this one AND not that one," the correct pair is "neither...nor."',
+    mapTo:'G5.6 Q12', teks:'L.5.1e'
+  },
+
+
+];
+
+var cur = 0, sel = null, submitted = false;
+var scores = new Array(QS.length).fill(null);
+var triedPerQ = QS.map(function(){ return []; });
+var lastWrongMsg = null, hintUnlocked = false, hintOpen = false;
+var STATE = 'quiz'; // 'quiz' | 'results' | 'review'
+
+function updateProgress() {
+  var n = cur + 1;
+  var pct = Math.round((cur / QS.length) * 100);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-label').textContent = 'Question ' + n + ' of ' + QS.length;
+  document.getElementById('prog-remain').textContent = (QS.length - cur) + ' remaining';
+}
+
+function esc(str) {
+  return str
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/\|b\|(.*?)\|\/b\|/g,'<strong>$1</strong>')
+    .replace(/\|i\|(.*?)\|\/i\|/g,'<em>$1</em>')
+    .replace(/\n/g,'<br>');
+}
+
+function render() {
+  if (STATE === 'results') { renderResults(); return; }
+  if (STATE === 'review')  { renderReview();  return; }
+
+  if (cur >= QS.length) { STATE = 'results'; renderResults(); return; }
+  var q = QS[cur];
+  var tried = triedPerQ[cur];
+  updateProgress();
+
+  var letters = ['A','B','C','D'];
+  var optsHTML = '';
+  for (var i = 0; i < q.opts.length; i++) {
+    var isCorrect = i === q.ans;
+    var wasTried  = tried.indexOf(i) !== -1;
+    var cls = 'opt';
+    if (submitted) {
+      cls += ' disabled';
+      if (isCorrect) cls += ' correct';
+      else if (wasTried) cls += ' wrong';
+    } else {
+      if (sel === i) cls += ' selected';
+      if (wasTried)  cls += ' wrong';
+    }
+    optsHTML += '<div class="' + cls + '" onclick="pick(' + i + ')">'
+      + '<div class="letter">' + letters[i] + '</div>'
+      + '<div>' + esc(q.opts[i]) + '</div></div>';
+  }
+
+  var fbHTML = '';
+  if (lastWrongMsg && !submitted) {
+    fbHTML = '<div class="feedback wrong-fb">' + esc(lastWrongMsg) + '</div>';
+  }
+  if (submitted) {
+    fbHTML = '<div class="feedback correct-fb">✓ ' + esc(q.exp) + '</div>';
+  }
+
+  var hintBtnCls  = 'hint-btn' + (hintUnlocked ? ' visible' : '');
+  var hintRevCls  = 'hint-reveal' + (hintOpen ? ' open' : '');
+  var backDis     = cur === 0 ? 'disabled' : '';
+
+  var btnHTML = submitted
+    ? '<button class="btn btn-back" onclick="goBack()" ' + backDis + '>← Back</button>'
+      + '<button class="btn btn-next" onclick="next()">Next question →</button>'
+    : '<button class="btn btn-back" onclick="goBack()" ' + backDis + '>← Back</button>'
+      + '<button class="btn btn-check" onclick="doSubmit()" ' + (sel === null ? 'disabled' : '') + '>Check answer</button>';
+
+  document.getElementById('app').innerHTML =
+    '<div class="card">'
+    + '<div style="font-size:11px;font-weight:700;color:#888;letter-spacing:.06em;text-transform:uppercase;margin-bottom:10px;">Question ' + (cur+1) + ' of ' + QS.length + '</div>'
+    + '<div class="question-text">' + esc(q.q) + '</div>'
+    + '<div class="tip-box">'
+    +   '<div class="tip-header"><span class="tip-label">Coaching Tip</span>'
+    +   '<button class="' + hintBtnCls + '" onclick="toggleHint()">'
+    +   (hintOpen ? EYE_OPEN : EYE_LOCKED) + ' ' + (hintOpen ? 'Hide hint' : 'Show hint') + '</button></div>'
+    +   '<div class="tip-text">' + esc(q.tip) + '</div>'
+    +   '<div class="' + hintRevCls + '">' + esc(q.hint) + '</div>'
+    + '</div>'
+    + '<div class="options">' + optsHTML + '</div>'
+    + fbHTML
+    + '<div class="btn-row">' + btnHTML + '</div>'
+    + '</div>';
+}
+
+function pick(i) {
+  if (submitted || triedPerQ[cur].indexOf(i) !== -1) return;
+  sel = i; render();
+}
+
+function toggleHint() {
+  if (!hintUnlocked) return;
+  hintOpen = !hintOpen; render();
+}
+
+function doSubmit() {
+  if (sel === null || submitted) return;
+  if (sel === QS[cur].ans) {
+    submitted = true;
+    scores[cur] = (triedPerQ[cur].length === 0);
+    lastWrongMsg = null;
+    render();
+  } else {
+    triedPerQ[cur].push(sel);
+    hintUnlocked = true;
+    var msg = QS[cur].wrongs[sel];
+    if (!msg) msg = "That's not quite right. The hint is now available if you need it.";
+    lastWrongMsg = msg;
+    sel = null;
+    render();
+  }
+}
+
+function next() {
+  cur++;
+  sel = null; submitted = false; lastWrongMsg = null; hintUnlocked = false; hintOpen = false;
+  render();
+}
+
+function goBack() {
+  if (cur === 0) return;
+  cur--;
+  sel = null; lastWrongMsg = null; hintUnlocked = false; hintOpen = false;
+  // Restore submitted state if already answered
+  submitted = (scores[cur] !== null);
+  render();
+}
+
+function renderResults() {
+  STATE = 'results';
+  document.getElementById('prog-wrap').style.display = 'none';
+  var correct = scores.filter(function(s){ return s === true; }).length;
+  var pct = Math.round((correct / QS.length) * 100);
+  var circ = 2 * Math.PI * 50;
+  var dash = (pct / 100) * circ;
+
+  document.getElementById('app').innerHTML =
+    '<div class="results">'
+    + '<div class="score-ring-wrap"><svg viewBox="0 0 120 120">'
+    + '<circle class="ring-track" cx="60" cy="60" r="50"/>'
+    + '<circle class="ring-fill" cx="60" cy="60" r="50"'
+    + ' stroke-dasharray="' + dash + ' ' + (circ-dash) + '"'
+    + ' stroke-dashoffset="' + (circ*.25) + '" transform="rotate(-90 60 60)"/>'
+    + '<text class="ring-text" x="60" y="57">' + pct + '%</text>'
+    + '<text class="ring-sub"  x="60" y="72">First Try</text>'
+    + '</svg></div>'
+    + '<h2>Nice work, Marcus!</h2>'
+    + '<p>You got ' + correct + ' of ' + QS.length + ' correct on the first try.</p>'
+    + '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">'
+    + '<button class="btn-restart" onclick="startReview()">Review all answers</button>'
+    + '<button class="btn-restart" style="background:#fff;color:#534AB7;border:2px solid #534AB7;" onclick="restart()">Practice again</button>'
+    + '</div></div>';
+}
+
+function startReview() {
+  STATE = 'review';
+  render();
+}
+
+function renderReview() {
+  document.getElementById('prog-wrap').style.display = 'none';
+  var letters = ['A','B','C','D'];
+  var html = '<div class="review-header">'
+    + '<button class="btn btn-back" onclick="STATE=\'results\';renderResults()">← Back to results</button>'
+    + '<button class="btn btn-next" onclick="restart()">Practice again</button>'
+    + '</div>';
+
+  QS.forEach(function(q, idx) {
+    var firstTry = scores[idx] === true;
+    var tried    = triedPerQ[idx];
+    var cardCls  = firstTry ? 'review-card first-try' : 'review-card retry';
+    var badgeCls = firstTry ? 'review-badge ok' : 'review-badge bad';
+    var badgeTxt = firstTry ? '✓ First try' : '✗ Needed ' + (tried.length + 1) + ' attempt' + (tried.length + 1 > 1 ? 's' : '');
+
+    var optsHTML = '';
+    for (var i = 0; i < q.opts.length; i++) {
+      var cls = 'review-opt ';
+      if (i === q.ans)              cls += 'ro-correct';
+      else if (tried.indexOf(i) !== -1) cls += 'ro-tried';
+      else                          cls += 'ro-neutral';
+      optsHTML += '<div class="' + cls + '"><strong>' + letters[i] + '</strong>&nbsp;&nbsp;' + esc(q.opts[i]) + '</div>';
+    }
+
+    html += '<div class="' + cardCls + '">'
+      + '<span class="' + badgeCls + '">' + badgeTxt + '</span>'
+      + '<div class="review-qtext">' + esc(q.q) + '</div>'
+      + optsHTML
+      + '<div class="review-exp">' + esc(q.exp) + '</div>'
+      + '</div>';
+  });
+
+  document.getElementById('app').innerHTML = html;
+}
+
+function restart() {
+  cur = 0; sel = null; submitted = false; lastWrongMsg = null;
+  hintUnlocked = false; hintOpen = false; STATE = 'quiz';
+  scores = new Array(QS.length).fill(null);
+  triedPerQ = QS.map(function(){ return []; });
+  document.getElementById('prog-wrap').style.display = '';
+  render();
+}
+
+render();
+</script>
+</body>
+</html>
